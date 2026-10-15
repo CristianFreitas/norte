@@ -1,0 +1,7 @@
+{
+  "name": "norte",
+  "version": "0.1.0",
+  "author": { "name": "Cristian Freitas", "url": "https://cristianfreitas.dev" },
+  "description": "Barra de progresso do objetivo da sessão: mantém o Claude (e você) sem perder o norte.",
+  "types": "./types/index.d.ts"
+}

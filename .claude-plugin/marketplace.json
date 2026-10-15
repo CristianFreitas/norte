@@ -1,0 +1,5 @@
+{
+  "name": "norte",
+  "owner": { "name": "Cristian Freitas", "url": "https://cristianfreitas.dev" },
+  "plugins": [{ "name": "norte", "source": "./" }]
+}
