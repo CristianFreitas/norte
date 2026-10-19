@@ -39,6 +39,8 @@ No app desktop: clique em + ao lado do prompt, Plugins, Add marketplace com `Cri
 
 Depois de definir o objetivo, o Claude quebra em 3 a 8 etapas pela ferramenta `progresso` e marca cada uma ao concluir.
 
+Sem `/norte`, o próprio Claude pode definir o objetivo: a ferramenta `progresso` aceita `objetivo` (uma linha com o resultado que o pedido quer). Passar um objetivo diferente troca de tarefa e zera a barra.
+
 - A porcentagem é `etapas feitas / total`, não um chute do modelo.
 - Cada mensagem sua leva um lembrete curto do objetivo e da próxima etapa, como contexto da mensagem (não no system prompt, para não invalidar o cache da conversa).
 - 3 turnos seguidos sem fechar etapa: aviso amarelo de deriva. Turnos de subagentes não contam.

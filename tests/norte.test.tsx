@@ -98,3 +98,29 @@ test('deriva: 3 turnos sem concluir etapa vira aviso; subagente não conta', asy
   expect(depois).not.toContain('turnos sem concluir')
   expect(depois).toContain('+1 etapa desde o plano')
 })
+
+test('sem /norte, o agente define o objetivo pela ferramenta; trocar de tarefa zera', async ($) => {
+  const sem = await $.tool.call(progresso([{ texto: 'a', feita: false }]))
+  expect(String(sem.result)).toContain('Erro')
+
+  const r = await $.tool.call({
+    ...progresso([{ texto: 'ler', feita: true }, { texto: 'mudar', feita: false }]),
+    objetivo: 'corrigir o login',
+  } as never)
+  expect(String(r.result)).toContain('Objetivo: corrigir o login')
+  expect(String(r.result)).toContain('1/2 etapas (50%)')
+
+  const mesmo = await $.tool.call({
+    ...progresso([{ texto: 'ler', feita: true }, { texto: 'mudar', feita: true }, { texto: 'testar', feita: false }]),
+    objetivo: 'corrigir o login',
+  } as never)
+  expect(String(mesmo.result)).toContain('2/3 etapas')
+
+  const outro = await $.tool.call({
+    ...progresso([{ texto: 'x', feita: false }]),
+    objetivo: 'publicar o post',
+  } as never)
+  expect(String(outro.result)).toContain('Objetivo: publicar o post')
+  const status = await $.command.run({ command: 'norte', args: '', origin: COMPOSER, presentation: TELA })
+  expect(status.text).toContain('0/1 etapas')
+})

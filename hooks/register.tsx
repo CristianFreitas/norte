@@ -35,7 +35,7 @@ export const resumo = (n: Norte) =>
 export const lembrete = (n: Norte) => {
   if (n.etapas.length === 0) {
     return (
-      `[norte] Objetivo da sessão, definido pelo usuário: «${n.objetivo}». ` +
+      `[norte] Objetivo da sessão: «${n.objetivo}». ` +
       `Ainda não há plano: antes de executar, chame ${TOOL} com 3 a 8 etapas ` +
       `verificáveis que, juntas, entregam o objetivo (todas feita=false).`
     )
@@ -70,6 +70,15 @@ const lerEtapas = (input: unknown): Etapa[] | string => {
   return etapas
 }
 
+const inicial = (objetivo: string): Norte => ({
+  objetivo,
+  etapas: [],
+  etapasNoPlano: 0,
+  turnos: 0,
+  turnosSemAvanco: 0,
+  feitasNoInicioDoTurno: 0,
+})
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
@@ -80,12 +89,15 @@ export const register: Register = on => {
     await $.tool.register({
       name: 'progresso',
       description:
-        'Registra o plano e o progresso rumo ao objetivo da sessão (definido pelo usuário com /norte). ' +
+        'Registra o objetivo, o plano e o progresso da sessão. ' +
         'Envie sempre a lista completa de etapas, na ordem, cada uma com feita=true/false. ' +
-        'Chame ao montar o plano, ao concluir cada etapa e ao descobrir trabalho novo necessário.',
+        'Chame ao montar o plano, ao concluir cada etapa e ao descobrir trabalho novo necessário. ' +
+        'Sem objetivo definido (o usuário não rodou /norte), passe objetivo: uma linha com o resultado que o pedido do usuário quer. ' +
+        'Só passe objetivo de novo quando o usuário trocar de tarefa: isso zera a barra.',
       inputSchema: {
         type: 'object',
         properties: {
+          objetivo: { type: 'string' },
           etapas: {
             type: 'array',
             items: {
@@ -118,14 +130,7 @@ export const register: Register = on => {
       return { text: 'Objetivo removido.' }
     }
 
-    const novo: Norte = {
-      objetivo: args,
-      etapas: [],
-      etapasNoPlano: 0,
-      turnos: 0,
-      turnosSemAvanco: 0,
-      feitasNoInicioDoTurno: 0,
-    }
+    const novo = inicial(args)
     await update($, atual, () => novo)
     $.ui.status('norte 0%')
 
@@ -133,9 +138,12 @@ export const register: Register = on => {
   })
 
   on('tool.call', { tool: TOOL }, async ($, e) => {
-    const n = await read($, atual)
+    const salvo = await read($, atual)
+    const pedido = (e as { objetivo?: unknown }).objetivo
+    const objetivo = typeof pedido === 'string' ? pedido.trim() : ''
+    const n = objetivo && objetivo !== salvo?.objetivo ? inicial(objetivo) : salvo
     if (!n) {
-      return { result: 'Nenhum objetivo definido. Peça ao usuário para rodar /norte <objetivo>.' }
+      return { result: 'Erro: nenhum objetivo definido. Passe objetivo com o resultado que o usuário pediu.' }
     }
     const etapas = lerEtapas(e)
     if (typeof etapas === 'string') return { result: `Erro: ${etapas}` }
